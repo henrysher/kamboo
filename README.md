@@ -1,4 +1,4 @@
 kamboo
 ======
 
-A tool to create, share, copy AMI images or EC2 snapshots across accounts and regions
+A tool to build and distribute AMI images or EC2 snapshots across accounts and regions
