@@ -17,7 +17,8 @@ if sys.version_info[:2] == (2, 6):
 setup_options = dict(
     name='kamboo',
     version=kamboo.__version__,
-    description='',
+    description='To build and distribute AMI images' +
+    ' or EC2 snapshots across accounts and regions',
     long_description=open('README.rst').read(),
     author='Henry Huang',
     author_email='henry.s.huang@gmail.com',
