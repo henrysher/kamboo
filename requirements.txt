@@ -1,0 +1,13 @@
+six==1.1.0
+tox==1.4
+docutils>=0.10
+Sphinx==1.1.3
+# botocore, boto3 and the kamboo packages are typically developed
+# in tandem, so we're requiring the latest develop
+# branch of botocore and boto3 when working on the kamboo.
+-e git://github.com/boto/botocore.git@develop#egg=botocore
+-e git://github.com/boto/boto3.git@develop#egg=boto3
+-e git://github.com/boto/jmespath.git@develop#egg=jmespath
+nose==1.3.0
+mock==1.0.1
+rsa==3.1.2
