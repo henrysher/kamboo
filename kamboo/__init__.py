@@ -14,3 +14,4 @@
 
 __author__ = 'Henry Huang'
 __version__ = '0.1'
+__release__ = 'alpha'
