@@ -10,8 +10,10 @@ class KambooConnection(object):
     session = botocore.session.get_session()
 
     def __init__(self, service_name="ec2", region_name="us-east-1",
+                 account_id=None,
                  credentials=None):
         self.region = region_name
+        self.account_id = account_id
         self.credentials = credentials
         if self.credentials:
             self.session.set_credentials(**self.credentials)
