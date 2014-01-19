@@ -1,11 +1,31 @@
+# Copyright (c) 2014, Henry Huang
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import logging
 from collections import namedtuple
 from botocore import xform_name
-from core import KambooConnection
-from utils import compare_list_of_dict, drop_null_items
+
+from kamboo.core import KambooConnection
+from kamboo.exceptions import KambooException, TooManyRecordsException
+from kamboo.utils import compare_list_of_dict, clean_null_items
+
+log = logging.getLogger(__name__)
 
 
 class ImageCollection(KambooConnection):
     """
+    Represents a collection of EC2 Images
     """
     def __init__(self, service_name, region_name,
                  account_id=None, credentials=None):
@@ -14,12 +34,35 @@ class ImageCollection(KambooConnection):
                                               account_id,
                                               credentials)
 
+    def copy_resource(self, source_region, source_image_id,
+                      image_name=None, image_description=None):
+        params = { "source_region": source_region,
+                   "source_image_id": source_image_id,
+                   "name": image_name,
+                   "description": image_description}
+
+        r_data = self.conn.copy_image(**clean_null_items(params))
+                                    
+        print r_data
+        if "ImageId" not in r_data:
+            raise KambooException(
+                "Fail to copy the image '%s:%s'" % (source_region,
+                                                    source_image_id))
+        return Image(r_data["ImageId"], collection=self)
+
     def get_resource_attribute(self, image_id):
-        try:
-            return_data = self.conn.describe_images(image_ids=[image_id])
-        except Exception, e:
-            pass
-        attr_dict = return_data["Images"][0]
+        """
+        Fetch the attribute of the specified EC2 Image
+        """
+        r_data = self.conn.describe_images(image_ids=[image_id])
+
+        if "Images" not in r_data:
+            raise KambooException("No such image attribute found")
+
+        if len(r_data["Images"]) > 1:
+            raise TooManyRecordsException("More than two images found")
+
+        attr_dict = r_data["Images"][0]
         attr_dict.update(
             {"Permission": self.get_resource_permission(image_id)})
         name = self.__class__.__name__
@@ -28,37 +71,64 @@ class ImageCollection(KambooConnection):
         return namedtuple(name, keys)(*attr_dict.values())
 
     def get_resource_permission(self, image_id):
-        try:
-            return_data = self.conn.describe_image_attribute(
-                image_id=image_id, attribute="launchPermission")
-        except Exception, e:
-            pass
-        return return_data["LaunchPermissions"]
+        """
+        Fetch the permission of the specified EC2 Image
+        """
+        r_data = self.conn.describe_image_attribute(
+            image_id=image_id,
+            attribute="launchPermission")
+
+        if "LaunchPermissions" not in r_data:
+            raise KambooException("No such image permission found")
+
+        return r_data["LaunchPermissions"]
 
     def set_resource_permission(self, id, old, new):
-        params = drop_null_items(compare_list_of_dict(old, new))
-        if not params:
-            return
-        try:
-            response_data = self.conn.modify_image_attribute(
-                image_id=id, launch_permission=params)
-        except Exception, e:
-            raise
+        """
+        Modify the permission of the specified EC2 Image
+        """
+        permission_diff = compare_list_of_dict(old, new)
+        params = clean_null_items(permission_diff)
+        if params:
+            self.conn.modify_image_attribute(image_id=id,
+                                             launch_permission=params)
+
+    def get_resource_tags(self, image_id):
+        """
+        Fetch the tags of the specified EC2 Image
+        """
+        r_data = self.conn.describe_tags(resources=[image_id])
+
+        if "Tags" not in r_data:
+            raise KambooException("No such image tags found")
+
+        return r_data["Tags"]
+
+    def set_resource_tags(self, image_id, tags=None):
+        """
+        Modify the tags of the specified EC2 Image
+        """
+        r_data = self.conn.create_tags(resources=[image_id], tags=tags)
+
+        if "return" in r_data:
+            if r_data["return"] == "true":
+                return
+
+        raise KambooException("Fail to add tags to the specified image")
 
 
 class Image(object):
     """
+    Represents an EC2 Image
     """
 
     def __init__(self, id, attribute=None, collection=None):
-        if not any([attribute, collection]):
-            raise
         self.id = id
         self.collection = collection
         self.refresh_resource_attribute(id, attribute)
 
     def __repr__(self):
-        return ""
+        return 'Image:%s' % self.id
 
     @property
     def desc(self):
@@ -75,7 +145,7 @@ class Image(object):
 
     @tags.setter
     def tags(self, value):
-        self.collection.conn.create_tags(resources=[self.id], tags=value)
+        self.collection.set_resource_tags(self.id, tags=value)
         self._tags = value
 
     @property
@@ -93,6 +163,7 @@ class Image(object):
             id = self.id
         if not attribute:
             attribute = self.collection.get_resource_attribute(id)
+        print attribute
 
         self.id = attribute.image_id
         self.is_public = attribute.public

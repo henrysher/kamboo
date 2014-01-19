@@ -14,6 +14,6 @@
 
 
 import logging
-import boto3
+import kotocore
 
-LOG = logging.getLogger(__name__)
+log = logging.getLogger(__name__)

@@ -1,5 +1,5 @@
 
-def drop_null_items(obj):
+def clean_null_items(obj):
     for key in obj.keys():
         # For "if" statement,
         # Here are some scenarios for the condition to be true:
