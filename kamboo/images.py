@@ -36,14 +36,13 @@ class ImageCollection(KambooConnection):
 
     def copy_resource(self, source_region, source_image_id,
                       image_name=None, image_description=None):
-        params = { "source_region": source_region,
-                   "source_image_id": source_image_id,
-                   "name": image_name,
-                   "description": image_description}
+        params = {"source_region": source_region,
+                  "source_image_id": source_image_id,
+                  "name": image_name,
+                  "description": image_description}
 
         r_data = self.conn.copy_image(**clean_null_items(params))
-                                    
-        print r_data
+
         if "ImageId" not in r_data:
             raise KambooException(
                 "Fail to copy the image '%s:%s'" % (source_region,
@@ -163,7 +162,6 @@ class Image(object):
             id = self.id
         if not attribute:
             attribute = self.collection.get_resource_attribute(id)
-        print attribute
 
         self.id = attribute.image_id
         self.is_public = attribute.public
