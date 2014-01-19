@@ -9,8 +9,10 @@ class ImageCollection(KambooConnection):
     """
     def __init__(self, service_name, region_name,
                  account_id=None, credentials=None):
-        super(ImageCollection, self).__init__(
-            service_name, region_name, account_id, credentials)
+        super(ImageCollection, self).__init__(service_name,
+                                              region_name,
+                                              account_id,
+                                              credentials)
 
     def get_resource_attribute(self, image_id):
         try:
