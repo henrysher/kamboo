@@ -9,6 +9,10 @@ class ValidationError(KambooException):
     pass
 
 
+class TimeOutException(KambooException):
+    pass
+
+
 class TooManyRecordsException(KambooException):
     """
     Exception raised when a search of records returns more

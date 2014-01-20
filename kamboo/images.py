@@ -19,6 +19,7 @@ from botocore import xform_name
 from kamboo.core import KambooConnection
 from kamboo.exceptions import KambooException, TooManyRecordsException
 from kamboo.utils import compare_list_of_dict, clean_null_items
+from kamboo.utils import wait_to_complete
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +48,16 @@ class ImageCollection(KambooConnection):
             raise KambooException(
                 "Fail to copy the image '%s:%s'" % (source_region,
                                                     source_image_id))
+
         return Image(r_data["ImageId"], collection=self)
+
+    def wait_to_copy_resource(self, source_region, source_image_id,
+                              image_name=None, image_description=None):
+        image = self.copy_resource(source_region=source_region,
+                                   source_image_id=source_image_id,
+                                   image_name=image_name,
+                                   image_description=image_description)
+        return wait_to_complete(resource=image, expected_status="available")
 
     def get_resource_attribute(self, image_id):
         """
@@ -64,7 +74,7 @@ class ImageCollection(KambooConnection):
         attr_dict = r_data["Images"][0]
         attr_dict.update(
             {"Permission": self.get_resource_permission(image_id)})
-        name = self.__class__.__name__
+        name = self.__class__.__name__ + "Attribute"
         keys = [xform_name(key) for key in attr_dict.keys()]
 
         return namedtuple(name, keys)(*attr_dict.values())
@@ -115,6 +125,17 @@ class ImageCollection(KambooConnection):
 
         raise KambooException("Fail to add tags to the specified image")
 
+    def delete_resource(self, image_id):
+        """
+        Delete the specified EC2 Image
+        """
+        r_data = self.collection.conn.deregister_image(image_id=id)
+        if "return" in r_data:
+            if r_data["return"] == "true":
+                return
+
+        raise KambooException("Fail to delete the specified image")
+
 
 class Image(object):
     """
@@ -137,6 +158,11 @@ class Image(object):
     def desc(self, value):
         self._desc = self.collection.conn.modify_image_attribute(
             image_id=self.id, description=value)
+
+    @property
+    def status(self):
+        self.refresh_resource_attribute()
+        return self.state
 
     @property
     def tags(self):
@@ -162,18 +188,14 @@ class Image(object):
             id = self.id
         if not attribute:
             attribute = self.collection.get_resource_attribute(id)
+        self.__dict__.update(attribute._asdict())
 
-        self.id = attribute.image_id
-        self.is_public = attribute.public
-        self.name = attribute.name
-        self.status = attribute.state
-        self.owner = attribute.owner_id
-        self.type = attribute.image_type
-        self.block_device_mappings = attribute.block_device_mappings
-        self.kernel_id = attribute.kernel_id
-        self.root_device_name = attribute.root_device_name
-        self.root_device_type = attribute.root_device_type
+        self.id = self.image_id
+        self._tags = getattr(attribute, "tags", None)
+        self._desc = getattr(attribute, "description", None)
+        self._permission = getattr(attribute, "permission", None)
 
-        self._tags = attribute.tags
-        self._desc = attribute.description
-        self._permission = attribute.permission
+    def delete(self, id=None):
+        if id is None:
+            id = self.id
+        self.collection.delete_resource(id)

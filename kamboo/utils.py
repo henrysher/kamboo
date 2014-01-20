@@ -1,3 +1,6 @@
+import time
+from kamboo.exceptions import TimeOutException
+
 
 def clean_null_items(obj):
     for key in obj.keys():
@@ -51,3 +54,22 @@ def compare_list_of_dict(src_list, dest_list):
 
     result = {"Add": added_list, "Remove": removed_list}
     return result
+
+
+def wait_to_complete(resource=None, expected_status=None,
+                     unit=5, timeout=60):
+    """
+    Wait for the specified operation to complete
+    """
+    for i in xrange(timeout / unit):
+        if resource.status == expected_status:
+            return resource
+        time.sleep(5)
+
+    if resource.status == expected_status:
+        return resource
+    else:
+        raise TimeOutException(
+            "The operation has '%s' timed out "
+            "when no expected result '%s' found" % (timeout, expected_status)
+            )
