@@ -1,4 +1,6 @@
 import time
+from six.moves import range
+
 from kamboo.exceptions import TimeOutException
 from kamboo.exceptions import ValidationError
 
@@ -62,7 +64,7 @@ def wait_to_complete(resource=None, expected_status=None,
     """
     Wait for the specified operation to complete
     """
-    for i in xrange(int(timeout/unit)):
+    for i in range(int(timeout/unit)):
         if resource.status == expected_status:
             return resource
         time.sleep(unit)
