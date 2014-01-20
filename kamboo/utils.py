@@ -1,5 +1,6 @@
 import time
 from kamboo.exceptions import TimeOutException
+from kamboo.exceptions import ValidationError
 
 
 def clean_null_items(obj):
@@ -27,7 +28,7 @@ def clean_null_items(obj):
 
 def unique_list_of_dict(src_list):
     if not isinstance(src_list, list):
-        raise
+        raise ValidationError("Expect input as 'list'")
     dest_list = []
     for item in src_list:
         if item not in dest_list:
@@ -37,7 +38,7 @@ def unique_list_of_dict(src_list):
 
 def compare_list_of_dict(src_list, dest_list):
     if not isinstance(src_list, list) or not isinstance(dest_list, list):
-        raise
+        raise ValidationError("Expect inputs as 'list'")
 
     added_list = []
     removed_list = []
@@ -61,10 +62,10 @@ def wait_to_complete(resource=None, expected_status=None,
     """
     Wait for the specified operation to complete
     """
-    for i in xrange(timeout / unit):
+    for i in xrange(int(timeout/unit)):
         if resource.status == expected_status:
             return resource
-        time.sleep(5)
+        time.sleep(unit)
 
     if resource.status == expected_status:
         return resource
