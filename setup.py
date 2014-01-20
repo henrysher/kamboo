@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 import kamboo
 
 
-requires = ['boto3']
+requires = ['kotocore']
 
 if sys.version_info[:2] == (2, 6):
     # For python2.6 we have to require argparse since it
