@@ -75,8 +75,9 @@ class ImageCollection(KambooConnection):
         try:
             attr_dict.update(
                 {"Permission": self.get_resource_permission(image_id)})
-        except Exception, e:
+        except Exception as e:
             pass
+
         name = ''.join([self.__class__.__name__, "Attribute"])
         keys = [xform_name(key) for key in attr_dict.keys()]
 
