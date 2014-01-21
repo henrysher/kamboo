@@ -28,17 +28,17 @@ class ImageCollection(KambooConnection):
     """
     Represents a collection of EC2 Images
     """
-    def __init__(self, service_name, region_name,
+    def __init__(self, service_name="ec2", region_name=None,
                  account_id=None, credentials=None):
         super(ImageCollection, self).__init__(service_name,
                                               region_name,
                                               account_id,
                                               credentials)
 
-    def copy_resource(self, source_region, source_image_id,
+    def copy_resource(self, source_region, source_id,
                       image_name=None, image_description=None):
         params = {"source_region": source_region,
-                  "source_image_id": source_image_id,
+                  "source_image_id": source_id,
                   "name": image_name,
                   "description": image_description}
 
@@ -47,14 +47,14 @@ class ImageCollection(KambooConnection):
         if "ImageId" not in r_data:
             raise KambooException(
                 "Fail to copy the image '%s:%s'" % (source_region,
-                                                    source_image_id))
+                                                    source_id))
 
         return Image(r_data["ImageId"], collection=self)
 
-    def wait_to_copy_resource(self, source_region, source_image_id,
+    def wait_to_copy_resource(self, source_region, source_id,
                               image_name=None, image_description=None):
         image = self.copy_resource(source_region=source_region,
-                                   source_image_id=source_image_id,
+                                   source_id=source_id,
                                    image_name=image_name,
                                    image_description=image_description)
         return wait_to_complete(resource=image, expected_status="available")
@@ -74,7 +74,7 @@ class ImageCollection(KambooConnection):
         attr_dict = r_data["Images"][0]
         attr_dict.update(
             {"Permission": self.get_resource_permission(image_id)})
-        name = self.__class__.__name__ + "Attribute"
+        name = ''.join([self.__class__.__name__, "Attribute"])
         keys = [xform_name(key) for key in attr_dict.keys()]
 
         return namedtuple(name, keys)(*attr_dict.values())
@@ -191,9 +191,15 @@ class Image(object):
         self.__dict__.update(attribute._asdict())
 
         self.id = self.image_id
-        self._tags = getattr(attribute, "tags", None)
-        self._desc = getattr(attribute, "description", None)
-        self._permission = getattr(attribute, "permission", None)
+        self._tags = getattr(attribute, "tags", [])
+        self._desc = getattr(attribute, "description", "")
+        self._permission = getattr(attribute, "permission", [])
+
+    def add_permission(self, account_id):
+        new_permission = []
+        new_permission.extend(self.permission)
+        new_permission.append({"UserId": account_id})
+        self.permission = new_permission
 
     def delete(self, id=None):
         if id is None:
