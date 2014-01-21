@@ -36,11 +36,11 @@ class ImageCollection(KambooConnection):
                                               credentials)
 
     def copy_resource(self, source_region, source_id,
-                      image_name=None, image_description=None):
+                      name=None, description=None):
         params = {"source_region": source_region,
                   "source_image_id": source_id,
-                  "name": image_name,
-                  "description": image_description}
+                  "name": name,
+                  "description": description}
 
         r_data = self.conn.copy_image(**clean_null_items(params))
 
@@ -52,11 +52,11 @@ class ImageCollection(KambooConnection):
         return Image(r_data["ImageId"], collection=self)
 
     def wait_to_copy_resource(self, source_region, source_id,
-                              image_name=None, image_description=None):
+                              name=None, description=None):
         image = self.copy_resource(source_region=source_region,
                                    source_id=source_id,
-                                   image_name=image_name,
-                                   image_description=image_description)
+                                   name=name,
+                                   description=description)
         return wait_to_complete(resource=image, expected_status="available")
 
     def get_resource_attribute(self, image_id):
