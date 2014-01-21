@@ -53,9 +53,9 @@ class Distee(object):
                                               account_id=source_account_id,
                                               credentials=source_credentials)
 
-        self.dest_collection = self.collection(region_name=source_region,
-                                               account_id=source_account_id,
-                                               credentials=source_credentials)
+        self.dest_collection = self.collection(region_name=dest_region,
+                                               account_id=dest_account_id,
+                                               credentials=dest_credentials)
 
         self.source = self.resource(source_id, collection=self.src_collection)
 
@@ -65,9 +65,9 @@ class Distee(object):
         """
 
         if self.source_account_id == self.dest_account_id:
-            self.dist_to_same_account(wait=wait)
+            return self.dist_to_same_account(wait=wait)
         else:
-            self.dist_to_different_account(wait=wait)
+            return self.dist_to_different_account(wait=wait)
 
     def dist_to_same_account(self, collection=None, wait=False):
         """
@@ -107,7 +107,8 @@ class Distee(object):
                 collection=collection, wait=wait)
             new_resource.add_permission(self.dest_account_id)
 
-        self.resource(new_resource.id, collection=self.dest_collection)
+        new_resource = self.resource(new_resource.id,
+                                     collection=self.dest_collection)
 
         if self.dest_tags:
             new_resource.tags = self.dest_tags
