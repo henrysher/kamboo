@@ -23,11 +23,12 @@ class KambooConnection(object):
     """
     Kamboo connection with botocore session initialized
     """
-    session = botocore.session.get_session()
 
     def __init__(self, service_name="ec2", region_name="us-east-1",
                  account_id=None,
                  credentials=None):
+        self.session = botocore.session.get_session()
+        self.service = service_name
         self.region = region_name
         self.account_id = account_id
         self.credentials = credentials
@@ -35,3 +36,8 @@ class KambooConnection(object):
             self.session.set_credentials(**self.credentials)
         Connection = Session(session=self.session).get_connection(service_name)
         self.conn = Connection(region_name=self.region)
+
+    def __repr__(self):
+        return "KambooConnection: [%s, %s, %s]" % (self.account_id,
+                                                   self.region,
+                                                   self.service)
