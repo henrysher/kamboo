@@ -72,8 +72,11 @@ class ImageCollection(KambooConnection):
             raise TooManyRecordsException("More than two images found")
 
         attr_dict = r_data["Images"][0]
-        attr_dict.update(
-            {"Permission": self.get_resource_permission(image_id)})
+        try:
+            attr_dict.update(
+                {"Permission": self.get_resource_permission(image_id)})
+        except Exception, e:
+            pass
         name = ''.join([self.__class__.__name__, "Attribute"])
         keys = [xform_name(key) for key in attr_dict.keys()]
 
