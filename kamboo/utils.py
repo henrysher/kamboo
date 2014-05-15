@@ -82,7 +82,7 @@ def wait_to_complete(resource=None, expected_status=None,
     Wait the specified resource to complete
     """
     log.info("Wait for the resource '%s' to be '%s'"
-             % (resource.id, expected_status))
+             % (resource, expected_status))
     for i in range(int(timeout/unit)):
         status = resource.status
         if status == expected_status:
