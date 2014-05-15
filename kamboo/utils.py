@@ -89,7 +89,7 @@ def wait_to_complete(resource=None, expected_status=None,
             return resource
         log.info("Current status of the resource '%s': "
                  "still '%s', not the expected '%s'"
-                 % (resource.id, status, expected_status))
+                 % (resource, status, expected_status))
         time.sleep(unit)
 
     if resource.status == expected_status:
