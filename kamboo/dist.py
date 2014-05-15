@@ -73,6 +73,11 @@ class Distee(object):
         """
         Distribute the resource to the same account
         """
+        log.info("Distribute the resource '%s'"
+                 "to the same account '%s' from '%s' to '%s'" %
+                 (self.source_id, self.source_account_id,
+                  self.source_region, self.dest_region))
+
         if collection is None:
             collection = self.dest_collection
 
@@ -94,9 +99,20 @@ class Distee(object):
         """
         Distribute the resource to a different account
         """
+        log.info("Distribute the resource '%s': "
+                 "from the account '%s' to '%s' and "
+                 "from the region '%s' to '%s' " %
+                 (self.source_id, self.source_account_id, self.dest_account_id,
+                  self.source_region, self.dest_region))
 
         if self.source_region == self.dest_region:
+            log.debug("Detected same region for source and destination")
             self.source.add_permission(self.dest_account_id)
+            log.info("Shifted the resource '%s' "
+                     "to the same account '%s' "
+                     "under the region '%s' "
+                     % (self.source_id, self.source_account_id,
+                        self.dest_region))
             new_resource = self.source
         else:
             collection = self.collection(region_name=self.dest_region,
@@ -105,7 +121,17 @@ class Distee(object):
 
             new_resource = self.dist_to_same_account(
                 collection=collection, wait=wait)
+            log.info("Shifted the resource '%s' "
+                     "to the same account '%s' "
+                     "under the region '%s' "
+                     % (self.source_id, self.source_account_id,
+                        self.dest_region))
+
             new_resource.add_permission(self.dest_account_id)
+            log.info("Shifted the resource '%s' "
+                     "to the new account '%s' "
+                     % (self.source_id, self.dest_account_id,
+                        self.dest_region))
 
         new_resource = self.resource(new_resource.id,
                                      collection=self.dest_collection)
@@ -114,5 +140,8 @@ class Distee(object):
             new_resource.tags = self.dest_tags
         else:
             new_resource.tags = self.source.tags
+
+        log.info("Attached the tags '%s' to the resource '%s'"
+                 % (new_resource.tags, self.source_id))
 
         return new_resource

@@ -13,10 +13,13 @@
 # limitations under the License.
 
 import time
+import logging
 from six.moves import range
 
 from kamboo.exceptions import TimeOutException
 from kamboo.exceptions import ValidationError
+
+log = logging.getLogger(__name__)
 
 
 def clean_null_items(obj):
@@ -78,9 +81,15 @@ def wait_to_complete(resource=None, expected_status=None,
     """
     Wait the specified resource to complete
     """
+    log.info("Wait for the resource '%s' to be '%s'"
+             % (resource.id, expected_status))
     for i in range(int(timeout/unit)):
-        if resource.status == expected_status:
+        status = resource.status
+        if status == expected_status:
             return resource
+        log.info("Current status of the resource '%s': "
+                 "still '%s', not the expected '%s'"
+                 % (resource.id, status, expected_status))
         time.sleep(unit)
 
     if resource.status == expected_status:

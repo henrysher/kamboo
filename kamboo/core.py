@@ -36,6 +36,9 @@ class KambooConnection(object):
             self.session.set_credentials(**self.credentials)
         Connection = Session(session=self.session).get_connection(service_name)
         self.conn = Connection(region_name=self.region)
+        log.debug("KambooConnection: [%s, %s, %s]" % (self.account_id,
+                                                      self.region,
+                                                      self.service))
 
     def __repr__(self):
         return "KambooConnection: [%s, %s, %s]" % (self.account_id,
