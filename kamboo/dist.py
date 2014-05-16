@@ -88,11 +88,19 @@ class Distee(object):
             new_resource = collection.copy_resource(
                 self.source_region, self.source_id)
 
+        log.info("Shifted the resource '%s' "
+                 "to the same account '%s' "
+                 "under the region '%s' "
+                 % (self.source_id, self.source_account_id,
+                    self.dest_region))
+
         if self.dest_tags:
             new_resource.tags = tags
         else:
             new_resource.tags = self.source.tags
 
+        log.info("Attached the tags '%s' to the resource '%s'"
+                 % (new_resource.tags, self.source_id))
         return new_resource
 
     def dist_to_different_account(self, wait=False):
