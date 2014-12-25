@@ -77,7 +77,7 @@ def compare_list_of_dict(src_list, dest_list):
 
 
 def wait_to_complete(resource=None, expected_status=None,
-                     unit=5, timeout=300):
+                     unit=10, timeout=900):
     """
     Wait the specified resource to complete
     """
